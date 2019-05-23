@@ -5,52 +5,52 @@ using System.Windows.Forms;
 
 namespace ParkingDataBase
 {
-    public partial class FormMain : Form
+    public partial class FormMain : Form //класс основной формы
     {
-        private static string path = Environment.CurrentDirectory + "/ParkingDataBase.krs";
-        public static string password = "____";
+        private static string path = Environment.CurrentDirectory + "/ParkingDataBase.krs"; //путь записи данных
+        public static string password = "____"; //переменная пароля
 
-        private static int spaceAmount = 30;
+        private static int spaceAmount = 30; //переменная количества парковочных мест
 
-        private static bool dataSaved = true;
-        public static bool loged = false;
+        private static bool dataSaved = true; //флаг отсутствия несохраненных данных
+        public static bool loged = false; //флаг, определяющий возможность изменения данных
 
-        List<AccountCard> cardList = new List<AccountCard>(spaceAmount); 
+        List<AccountCard> cardList = new List<AccountCard>(spaceAmount);
 
         public FormMain()
         {
             InitializeComponent();
 
-            setDefaults();
-            initToolTips();
+            setDefaults(); //стартовая настройка параметров элементов управления
+            initToolTips(); //инициализация всплывающих подсказок для элементов управления
         }
 
         private void FormMain_Load(object sender, EventArgs e)
         {
-            if (loadData())
+            if (loadData()) //проверка наличия файла с данными базы
             {
 
             }
-            else
+            else //если подходящий файл не найден, вызвать форму создания новой базы
             {
                 this.Hide();
                 Form enterForm = new FormEnter();
                 enterForm.ShowDialog();
                 int spaceCounter = cardList.Count;
 
-                while (cardList.Count < spaceAmount)
+                while (cardList.Count < spaceAmount) //заполнение таблицы пустыми полями, которые в дальнейшем можно будет заполнить
                 {
                     AccountCard emptyCard = AccountCard.CreateEmpty(spaceCounter + 1);
                     cardList.Add(emptyCard);
                     spaceCounter++;
                 }
             }
-            updateTable();
+            updateTable(); //обновление таблицы
         }
 
-        private void initToolTips()
+        private void initToolTips() //инициализация всплывающих подсказок для элементов управления
         {
-            ToolTip toolTip = new ToolTip();
+            ToolTip toolTip = new ToolTip(); 
             toolTip.SetToolTip(placeAfterButton, "Укажите фамилию пользователя, после которого необходимо добавить новую запись, в поле справа.");
             toolTip.SetToolTip(targetSurname, "Фамилия пользователя, после которого будет добавлуна новая запись.");
             toolTip.SetToolTip(changePaymentDateButton, "Для изменения требуется указать фамилию пользователя в поле 'Фамилия'.");
@@ -63,25 +63,26 @@ namespace ParkingDataBase
             toolTip.SetToolTip(lastname, "Может содержать заглавные и строчные буквы, символы '-' и пробелы (Необходим минимум 1 буквенный символ).");
         }
 
-        private void DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e) //событие нажатия на поля таблицы
         {
-            if (!loged)
+            if (!loged) //проверка наличия доступа
             {
                 logIn();
                 return;
             }
             if (e.RowIndex >= 0)
             {
-                if (e.ColumnIndex == 6)
+                if (e.ColumnIndex == 6) //событие нажатия на кнопку удаления строки в таблице
                 {
                     if (MessageBox.Show("Стереть данные?", "Парковочное место №" + (e.RowIndex + 1), MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         insertTableRow(AccountCard.CreateEmpty(e.RowIndex + 1));
                         debugLog.AppendText("Данные стерты (Парковочное место " + (e.RowIndex + 1) + ")\r\n");
+                        dataSaved = false;
                     }
                     else debugLog.AppendText("Отмена перезаписи\r\n");
                 }
-                else if(e.ColumnIndex == 3 && isWord((string)dataGridView1[1, e.RowIndex].Value))
+                else if(e.ColumnIndex == 3 && isWord((string)dataGridView1[1, e.RowIndex].Value)) //событие изменения отметки о наличии автомобиля на стоянке
                 {
                     if(cardList[e.RowIndex].carParked)
                     {
@@ -93,9 +94,9 @@ namespace ParkingDataBase
                         cardList[e.RowIndex].carParked = true;
                         dataGridView1[e.ColumnIndex, e.RowIndex].Value = "\u2713";
                     }
-                    //debugLog.AppendText(cardList[e.RowIndex].carParked.ToString());
+                    dataSaved = false;
                 }
-                else if (e.ColumnIndex == 4 && isWord((string)dataGridView1[1, e.RowIndex].Value))
+                else if (e.ColumnIndex == 4 && isWord((string)dataGridView1[1, e.RowIndex].Value)) //событие изменения отметки о наличии оплаты за текущий месяц
                 {
                     if (cardList[e.RowIndex].parkingSpacePaid)
                     {
@@ -109,12 +110,12 @@ namespace ParkingDataBase
                         cardList[e.RowIndex].paymentDate = DateTime.Today;
                         dataGridView1[5, e.RowIndex].Value = DateTime.Today.ToShortDateString();
                     }
-                    //debugLog.AppendText(cardList[e.RowIndex].carParked.ToString());
+                    dataSaved = false;
                 }
             }
         }
 
-        private void updateTable()
+        private void updateTable() //обновление таблицы
         {
             dataGridView1.Rows.Clear();
             foreach (var card in cardList)
@@ -137,11 +138,13 @@ namespace ParkingDataBase
             debugLog.Clear();
         }
 
-        private void setDefaults()
+        private void setDefaults() //стартовая настройка параметров элементов управления
         {
+            //поле выбора парк. места
             numericUpDown1.Minimum = 1;
             numericUpDown1.Maximum = spaceAmount;
 
+            //поля для выбора даты
             dateDay.Maximum = DateTime.Today.Day;
             dateMonth.Maximum = DateTime.Today.Month;
             dateYear.Maximum = DateTime.Today.Year;
@@ -161,7 +164,7 @@ namespace ParkingDataBase
             password = newPassword;
         }
 
-        public void saveData()
+        public void saveData() //сохранение данных в файл
         {
             FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
             BinaryWriter writer = new BinaryWriter(fileStream);
@@ -179,11 +182,12 @@ namespace ParkingDataBase
             dataSaved = true;
         }
 
-        public bool loadData()
+        public bool loadData()  //загрузка данных из файла
         {
             FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Read);
             BinaryReader reader = new BinaryReader(fileStream);
 
+            //если невозможно считать, останавливаем выполнение метода
             try
             {
                 password = reader.ReadString();
@@ -202,6 +206,7 @@ namespace ParkingDataBase
                 return false;
             }
 
+            //дальнейшее считывание
             spaceAmount = reader.ReadInt32();
             cardList = new List<AccountCard>(spaceAmount);
             int i = 0;
@@ -217,28 +222,31 @@ namespace ParkingDataBase
             return true;
         }
 
-        private void logIn()
+        private void logIn() //запрос пароля при попытке изменить данные 
         {
+            //запрашивается при каждой попытке изменить данные, пока не будет введен верный пароль
             FormPassword request = new FormPassword();
             request.Show();
         }
 
-        private void ToTable_Click(object sender, System.EventArgs e)
+        private void ToTable_Click(object sender, System.EventArgs e) //запись данных в таблицу
         {
-            if(!loged)
+            if(!loged) //проверка наличия доступа
             {
                 logIn();
                 return;
             }
             DataGridViewCell selectedCell = dataGridView1.Rows[(int)numericUpDown1.Value - 1].Cells[1];
-            if (isWord((string)selectedCell.Value))
+            if (isWord((string)selectedCell.Value)) //проверка, пустое ли поле, в которое будет произведена запись
             {
-                debugLog.AppendText("Поле занято\r\n");
+                debugLog.AppendText("Поле занято\r\n"); 
 
                 int spaceNumber = selectedCell.RowIndex + 1;
 
+                //диалог о перезаписи данных
                 if (MessageBox.Show("Перезаписать данные?", "Парковочное место №" + spaceNumber, MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
+                    //изменение поля при подтверждении перезаписи
                     if (changeCellData((int)numericUpDown1.Value))
                     {
                         dataSaved = false;
@@ -247,14 +255,15 @@ namespace ParkingDataBase
                 }
                 else debugLog.AppendText("Отмена перезаписи\r\n");
             }
-            else
+            else //если поле не занято, производим запись
             {
                 changeCellData((int)numericUpDown1.Value);
             }
         }
 
-        private bool changeCellData(int spaceNumber)
+        private bool changeCellData(int spaceNumber) //метод для задания значений строки таблицы. Значения берутся из полей формы
         {
+            //проверки на корректность вводимых данных
             if (surname.Text.Length == 0 || !isWord((string)surname.Text))
             {
                 debugLog.AppendText("Некорректное значение поля: Фамилия\r\n");
@@ -271,7 +280,7 @@ namespace ParkingDataBase
             {
                 debugLog.AppendText("Некорректное значение поля: Автомобиль\r\n");
             }
-            else
+            else //если все поля имеют корректные значения, присваиваем строке таблицы значения
             {
                 AccountCard card = new AccountCard(spaceNumber, name.Text, surname.Text, lastname.Text, carBrand.Text);
                 insertTableRow(card);
@@ -284,7 +293,7 @@ namespace ParkingDataBase
             return false;
         }
 
-        private void insertTableRow(AccountCard card)
+        private void insertTableRow(AccountCard card) //метод для замещения старой строки таблицы новой строкой
         {
             cardList.RemoveAt(card.parkingSpaceNumber - 1);
             cardList.Insert(card.parkingSpaceNumber - 1, card);
@@ -303,7 +312,7 @@ namespace ParkingDataBase
             dataSaved = false;
         }
 
-        public bool isWord(string str)
+        public bool isWord(string str) //метод проверки корректности ввода фамилии, имени и т.д.
         {
             bool hasLetter = false;
             foreach(char c in str)
@@ -317,7 +326,7 @@ namespace ParkingDataBase
             return hasLetter;
         }
 
-        private void GetUnpaidButton_Click(object sender, System.EventArgs e)
+        private void GetUnpaidButton_Click(object sender, System.EventArgs e) //кнопка вывод долгов
         {
             updateTable();
             debugLog.AppendText("Задолженности:\r\n");
@@ -331,14 +340,14 @@ namespace ParkingDataBase
             }
         }
 
-        private void DeleteBySurname_Click(object sender, System.EventArgs e)
+        private void DeleteBySurname_Click(object sender, System.EventArgs e) //кнопка удаления по фамилии
         {
-            if (!loged)
+            if (!loged) //проверка наличия доступа
             {
                 logIn();
                 return;
             }
-            if (!isWord(surname.Text))
+            if (!isWord(surname.Text)) //проверка правильности введенной фамилии
             {
                 debugLog.AppendText("Некорректное значение поля: Фамилия\r\n");
                 return;
@@ -347,6 +356,7 @@ namespace ParkingDataBase
             {
                 if(card.getSurname() == surname.Text)
                 {
+                    //попытка удаления первого найденного поля с указанной фамилией
                     if (MessageBox.Show("Удалить данные?", "Парковочное место №" + card.parkingSpaceNumber, MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         insertTableRow(AccountCard.CreateEmpty(card.parkingSpaceNumber));
@@ -354,6 +364,7 @@ namespace ParkingDataBase
                         dataSaved = false;
                         return;
                     }
+                    //если пользователь отменил удаление, показать диалог о продолжении поиска
                     else if (MessageBox.Show("Продолжить поиск?", "Поиск других совпадений", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         debugLog.AppendText("Поиск дургих совпадений...\r\n");
@@ -364,7 +375,7 @@ namespace ParkingDataBase
             debugLog.AppendText("Поиск не дал результатов\r\n");
         }
 
-        private void DateYear_ValueChanged(object sender, EventArgs e)
+        private void DateYear_ValueChanged(object sender, EventArgs e) //обработка ограничений по дате
         {
             if(dateYear.Value == DateTime.Today.Year)
             {
@@ -378,7 +389,7 @@ namespace ParkingDataBase
             }
         }
 
-        private void DateMonth_ValueChanged(object sender, EventArgs e)
+        private void DateMonth_ValueChanged(object sender, EventArgs e) //обработка ограничений по дате
         {
             if(dateYear.Value == DateTime.Today.Year && dateMonth.Value == DateTime.Today.Month)
             {
@@ -390,14 +401,14 @@ namespace ParkingDataBase
             }
         }
 
-        private void ChangePaymentDateButton_Click(object sender, EventArgs e)
+        private void ChangePaymentDateButton_Click(object sender, EventArgs e) //кнопка изменения даты оплаты
         {
-            if (!loged)
+            if (!loged) //проверка наличия доступа
             {
                 logIn();
                 return;
             }
-            if (!isWord(surname.Text))
+            if (!isWord(surname.Text)) //проверка корректности ввода фамилии
             {
                 debugLog.AppendText("Некорректное значение поля: Фамилия\r\n");
                 return;
@@ -406,15 +417,17 @@ namespace ParkingDataBase
             {
                 if (card.getSurname() == surname.Text)
                 {
+                    //предложить пользователю изменить дату оплаты первой подходящей по фамилии записи
                     if (MessageBox.Show("Изменить дату оплаты?", "Парковочное место №" + card.parkingSpaceNumber, MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         DateTime newDate = new DateTime((int)dateYear.Value, (int)dateMonth.Value, (int)dateDay.Value);
                         cardList[card.parkingSpaceNumber - 1].paymentDate = newDate;
-                        dataGridView1[5, card.parkingSpaceNumber - 1].Value = newDate.ToShortDateString();
+                        updateTable();
                         debugLog.AppendText("Данные перезаписаны (Парковочное место " + card.parkingSpaceNumber + ")\r\n");
                         dataSaved = false;
                         return;
                     }
+                    //при отмене запрос на продолжение поиска
                     else if (MessageBox.Show("Продолжить поиск?", "Поиск других совпадений", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         debugLog.AppendText("Поиск дургих совпадений...\r\n");
@@ -425,7 +438,7 @@ namespace ParkingDataBase
             debugLog.AppendText("Поиск не дал результатов\r\n");
         }
 
-        private void FreeSpaceButton_Click(object sender, EventArgs e)
+        private void FreeSpaceButton_Click(object sender, EventArgs e) //кнопка вывода свободных парк. мест
         {
             debugLog.Clear();
             debugLog.AppendText("Свободные места:\r\n");
@@ -436,14 +449,14 @@ namespace ParkingDataBase
             }
         }
 
-        private void PlaceAfterButton_Click(object sender, EventArgs e)
+        private void PlaceAfterButton_Click(object sender, EventArgs e) //кнопка "занести после"
         {
-            if (!loged)
+            if (!loged) //проверка наличия доступа
             {
                 logIn();
                 return;
             }
-            if (!isWord(targetSurname.Text))
+            if (!isWord(targetSurname.Text)) //проверка фамилии для нацеливания
             {
                 debugLog.AppendText("Некорректное значение поля: укажите запись, после которой производить добавление.\r\n");
                 return;
@@ -453,11 +466,12 @@ namespace ParkingDataBase
                 if (card.getSurname() == targetSurname.Text)
                 {
                     if (card.parkingSpaceNumber == spaceAmount) continue;
-                    if (isWord(cardList[card.parkingSpaceNumber].getFullName()))
+                    if (isWord(cardList[card.parkingSpaceNumber].getFullName())) //проверка, свободно ли место после записи с указанной фамилией
                     {
                         debugLog.AppendText("Парковочное место №" + (card.parkingSpaceNumber + 1) + " уже забронировано.\r\n");
-                        return;
+                        continue;
                     }
+                    //запрос на добавление записи
                     if (MessageBox.Show("Добавить запись?", "Парковочное место №" + (card.parkingSpaceNumber + 1), MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         changeCellData(card.parkingSpaceNumber + 1);
@@ -465,6 +479,7 @@ namespace ParkingDataBase
                         dataSaved = false;
                         return;
                     }
+                    //запрос на продолжение поиска
                     else if (MessageBox.Show("Продолжить поиск?", "Поиск других совпадений", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         debugLog.AppendText("Поиск дургих совпадений...\r\n");
@@ -475,27 +490,28 @@ namespace ParkingDataBase
             debugLog.AppendText("Подходящее место не найдено.\r\n");
         }
 
-        private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
+        private void FormMain_FormClosing(object sender, FormClosingEventArgs e) //запрос на сохранение данных при выходе из программы
         {
-            if(!dataSaved) saveData();
+            if(!dataSaved)
+                if (MessageBox.Show("Сохранить данные?", "Завершение работы", MessageBoxButtons.YesNo) == DialogResult.Yes) saveData();
         }
 
-        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveToolStripMenuItem_Click(object sender, EventArgs e) //кнопка сохранения
         {
             saveData();
         }
 
-        private void RefreshToolStripMenuItem_Click(object sender, EventArgs e)
+        private void RefreshToolStripMenuItem_Click(object sender, EventArgs e) //кнопка "обновить"
         {
             updateTable();
         }
 
-        private void HelpToolStripMenuItem_Click(object sender, EventArgs e)
+        private void HelpToolStripMenuItem_Click(object sender, EventArgs e) //кнопка вызова справки
         {
             helpTextBox.Visible = !helpTextBox.Visible;
         }
 
-        private void SearchButton_Click(object sender, EventArgs e)
+        private void SearchButton_Click(object sender, EventArgs e) //кнопка для поиска по фамилии
         {
             debugLog.Clear();
             if(!isWord(surname.Text))

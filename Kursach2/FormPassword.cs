@@ -3,18 +3,18 @@ using System.Windows.Forms;
 
 namespace ParkingDataBase
 {
-    public partial class FormPassword : Form
+    public partial class FormPassword : Form //класс формы запроса пароля
     {
         public FormPassword()
         {
             InitializeComponent();
         }
 
-        private void AgreePasswordButton_Click(object sender, EventArgs e)
+        private void AgreePasswordButton_Click(object sender, EventArgs e) //кнопка подтверждения ввода
         {
-            if (passwordBox.Text.Equals(FormMain.password))
+            if (passwordBox.Text.Equals(FormMain.password)) //проверка правильности пароля
             {
-                FormMain.loged = true;
+                FormMain.loged = true; //установка флага доступа в главной форме
                 this.Close();
                 return;
             }
