@@ -259,6 +259,11 @@ namespace ParkingDataBase
             {
                 changeCellData((int)numericUpDown1.Value);
             }
+
+            //удаление содержимого полей ввода
+            name.Clear();
+            lastname.Clear();
+            carBrand.Clear();
         }
 
         private bool changeCellData(int spaceNumber) //метод для задания значений строки таблицы. Значения берутся из полей формы

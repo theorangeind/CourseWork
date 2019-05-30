@@ -167,7 +167,7 @@
             this.MinimizeBox = false;
             this.Name = "FormEnter";
             this.ShowIcon = false;
-            this.Text = "Создание базы данных";
+            this.Text = "Создание информационной базы";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormEnter_FormClosed);
             ((System.ComponentModel.ISupportInitialize)(this.tableLength)).EndInit();
             this.ResumeLayout(false);
